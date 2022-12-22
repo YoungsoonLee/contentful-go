@@ -19,7 +19,7 @@ type Collection struct {
 	Query
 	c        *Client
 	req      *http.Request
-	page     uint16
+	Page     uint16
 	Sys      *Sys          `json:"sys"`
 	Total    int           `json:"total"`
 	Skip     int           `json:"skip"`
@@ -39,14 +39,14 @@ func NewCollection(options *CollectionOptions) *Collection {
 
 	return &Collection{
 		Query: *query,
-		page:  1,
+		Page:  1,
 	}
 }
 
 // Next makes the col.req
 func (col *Collection) Next() (*Collection, error) {
 	// setup query params
-	skip := uint16(col.Limit) * (col.page - 1)
+	skip := uint16(col.Limit) * (col.Page - 1)
 	col.Query.Skip(skip)
 
 	// override request query
@@ -58,7 +58,7 @@ func (col *Collection) Next() (*Collection, error) {
 		return nil, err
 	}
 
-	col.page++
+	col.Page++
 
 	return col, nil
 }
@@ -66,7 +66,7 @@ func (col *Collection) Next() (*Collection, error) {
 // Next makes the col.req
 func (col *Collection) NextWithQueryParam(queryParams map[string]string) (*Collection, error) {
 	// setup query params
-	skip := col.Query.limit * (col.page - 1)
+	skip := col.Query.limit * (col.Page - 1)
 	col.Query.Skip(skip)
 
 	//query := url.Values{}
@@ -93,7 +93,7 @@ func (col *Collection) NextWithQueryParam(queryParams map[string]string) (*Colle
 		return nil, err
 	}
 
-	col.page++
+	col.Page++
 
 	return col, nil
 }
