@@ -4,6 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
+	"strconv"
+
+	"github.com/tidwall/gjson"
 )
 
 // CollectionOptions holds init options
@@ -45,6 +48,41 @@ func (col *Collection) Next() (*Collection, error) {
 	// setup query params
 	skip := uint16(col.Limit) * (col.page - 1)
 	col.Query.Skip(skip)
+
+	// override request query
+	col.req.URL.RawQuery = col.Query.String()
+
+	// makes api call
+	err := col.c.do(col.req, col)
+	if err != nil {
+		return nil, err
+	}
+
+	col.page++
+
+	return col, nil
+}
+
+// Next makes the col.req
+func (col *Collection) NextWithQueryParam(queryParams map[string]string) (*Collection, error) {
+	// setup query params
+	skip := col.Query.limit * (col.page - 1)
+	col.Query.Skip(skip)
+
+	//query := url.Values{}
+
+	for key, value := range queryParams {
+		if key == "include" {
+			value, _ := strconv.ParseUint(value, 16, 16)
+			col.Query.Include(uint16(value))
+			continue
+		}
+
+		if key == "content_type" {
+			col.Query.ContentType(value)
+			continue
+		}
+	}
 
 	// override request query
 	col.req.URL.RawQuery = col.Query.String()
@@ -106,6 +144,19 @@ func (col *Collection) ToAsset() []*Asset {
 
 	byteArray, _ := json.Marshal(col.Items)
 	json.NewDecoder(bytes.NewReader(byteArray)).Decode(&assets)
+
+	return assets
+}
+
+func (col *Collection) IncludesToAsset() []*Asset {
+	var assets []*Asset
+
+	byteCols, _ := json.Marshal(col)
+	values := gjson.Get(string(byteCols), "includes.Asset")
+
+	b := []byte(values.String())
+
+	json.NewDecoder(bytes.NewReader(b)).Decode(&assets)
 
 	return assets
 }
