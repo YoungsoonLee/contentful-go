@@ -170,6 +170,9 @@ func (c *Client) do(req *http.Request, v interface{}) error {
 		fmt.Println(command)
 	}
 
+	// TODO(Ted): would be removied
+	log.Printf("Request: %+v", req)
+
 	res, err := c.client.Do(req)
 	if err != nil {
 		return err
